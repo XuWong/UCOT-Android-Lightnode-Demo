@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="axu.ln.ucot.ucot.MainActivity">
+    <item
+        android:id="@+id/action_pic"
+        android:orderInCategory="1"
+        android:title="@string/action_pic"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_nfc"
+        android:orderInCategory="2"
+        android:title="@string/action_nfc"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="3"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>

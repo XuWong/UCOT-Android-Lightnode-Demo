@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Lu</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_pic">Secure Picture</string>
+    <string name="action_nfc">Secure NFC</string>
+    <string name="sp_address">address</string>
+    <string name="sp_name">settings</string>
+    <string name="bc_server_account">8c9c2121ce7a17e3bfa74dab35b453ea662a38ea</string>
+</resources>
