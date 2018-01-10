@@ -155,7 +155,8 @@ public class LNService extends Service {
                 e.printStackTrace();
             }
         } else {
-            Toast.makeText(getApplicationContext(), "Light client is not ready in service.", Toast.LENGTH_SHORT).show();
+            Log.i(tag, "light node is not ready");
+//            Toast.makeText(getApplicationContext(), "Light client is not ready in service.", Toast.LENGTH_SHORT).show();
             return;
         }
 
