@@ -128,24 +128,37 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
     protected void onResume() {
         super.onResume();
         Log.i(tag, "Activity resume");
-        if (init) {
+        if (!mBound && init)
+        {
             Intent startIntent = new Intent(MainActivity.this, LNService.class);
             MainActivity.this.startService(startIntent);
             bindService(startIntent, mConnection, BIND_AUTO_CREATE);
         }
+
     }
 
     protected void onStart() {
         super.onStart();
         Log.i(tag, "Activity Start");
+
+    }
+    protected void onPause() {
+        super.onPause();
+        Log.i(tag, "Activity pause");
+        if (mBound) {
+            unbindService(mConnection);
+            mBound=false;
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         Log.i(tag, "Activity stop");
-        // Unbind from the service
-
+        if (mBound) {
+            unbindService(mConnection);
+            mBound=false;
+        }
     }
 
     protected void onDestroy() {
@@ -175,11 +188,12 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
                 break;
             }
             case R.id.action_nfc: {
+                startActivity(new Intent(MainActivity.this,ActivitySecurePhoto.class));
                 break;
 
             }
             case R.id.action_settings: {
-                Toast.makeText(getApplicationContext(), "setting", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), "setting", Toast.LENGTH_SHORT).show();
                 break;
             }
 
@@ -201,7 +215,8 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
                 File picFile = new File(UriToPathUtil.getImageAbsolutePath(getApplicationContext(), uri));
                 String md5 = md5(picFile);
                 tv.append(md5 + "\n");
-                String cmd = "eth.sendTransaction({from:\"" + address + "\",to:\"" + getString(R.string.bc_server_account) + "\",value:web3.toWei(1,\"ether\"),data:web3.toHex('" + md5 + "')})";
+                String cmd = "eth.sendTransaction({from:\"0x" + address + "\",to:\"0x" + getString(R.string.bc_server_account) + "\",value:web3.toWei(1,\"ether\"),data:web3.toHex('" + md5 + "')})";
+//                String cmd = "eth.sendTransaction({from:eth.accounts[0],to:\"" + getString(R.string.bc_server_account) + "\",value:web3.toWei(0.1,\"ether\"),data:web3.toHex('" + md5 + "')})";
                 sendCommand(cmd);
             }
 
@@ -480,4 +495,6 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
         }
 
     }
+
+
 }

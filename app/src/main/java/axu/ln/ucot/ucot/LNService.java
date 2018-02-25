@@ -61,6 +61,7 @@ public class LNService extends Service {
                     public void run() {
                         SharedPreferences sp=getSharedPreferences(getString(R.string.sp_name),MODE_PRIVATE);
                         address =sp.getString(getString(R.string.sp_address),null);
+//                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" console";
                         input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" --syncmode light console";
                         Log.i("Ucot", input);
                         updateUI("res:" + output + "\n");
@@ -145,7 +146,7 @@ public class LNService extends Service {
     }
     public void sendCommand(String content){
 
-        Log.i("Ucot", "try to send command: " + content);
+        Log.i("Ucot", "try to send command!: " + content);
         if (os != null) {
             try {
                 updateUI("send Command: " + content + "\n");

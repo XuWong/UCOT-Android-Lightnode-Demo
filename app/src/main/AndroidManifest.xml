@@ -28,9 +28,13 @@
         </activity>
 
         <service
-            android:name="axu.ln.ucot.ucot.LNService"
+            android:name=".LNService"
             android:enabled="true"
             android:exported="true" />
+
+        <activity
+            android:name=".ActivitySecurePhoto"
+            android:label="@string/title_activity_secure_photo"></activity>
     </application>
 
 </manifest>
