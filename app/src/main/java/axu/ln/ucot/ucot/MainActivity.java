@@ -117,7 +117,14 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendCommand(ed.getText().toString());
+
+
+                SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
+                String txhash = sp.getString("logs_360_clear.timestamptxHash", null);
+                Log.i(tag,txhash);
+                sendCommand("eth.getTransaction("+txhash+")");
+
+//                sendCommand(ed.getText().toString());
 //                Snackbar.make(view, "Light client is not ready.", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
@@ -194,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
             }
             case R.id.action_settings: {
 //                Toast.makeText(getApplicationContext(), "setting", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this,ActivitySecureFile.class));
                 break;
             }
 
@@ -360,6 +368,7 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
                     File staticNode = new File(getFilesDir() + "/.ucot/node/geth/static-nodes.json");
                     if (!staticNode.exists()) {
                         updateUI("Copy static node \n");
+                        staticNode.createNewFile();
                         InputStream is = am.open("static-nodes.json");
                         FileOutputStream fos = new FileOutputStream(staticNode);
                         byte[] buffer = new byte[1024];

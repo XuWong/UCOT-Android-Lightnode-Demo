@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="com.necer.ndialog2:ndialog-1.0.2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/ndialog-1.0.2.aar/8dc44d536b521c367490a847bbd1cf1b/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/ndialog-1.0.2.aar/8dc44d536b521c367490a847bbd1cf1b/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.necer.ndialog2/ndialog/1.0.2/692a18bed2134c3c093bbbc33e910375a379b06a/ndialog-1.0.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

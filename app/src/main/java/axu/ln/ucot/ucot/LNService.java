@@ -47,6 +47,7 @@ public class LNService extends Service {
 //        !!!be careful with this function
 //                the folder existence does not mean that the client can be run
 //                because the files, e.g., ucot, key, may be damged
+        Log.i("ucot","start ln service");
         File folder = new File(getFilesDir() + "/.ucot/node");
         if (folder.exists()) {
             delay = 0;
@@ -61,11 +62,14 @@ public class LNService extends Service {
                     public void run() {
                         SharedPreferences sp=getSharedPreferences(getString(R.string.sp_name),MODE_PRIVATE);
                         address =sp.getString(getString(R.string.sp_address),null);
-//                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" console";
-                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" --syncmode light --cert 0ca175b9c0f726a831d895e2693324610ca175b9c0f726a831d895e269332461 console";
-//                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" --syncmode light console";
+                        if (address!=null)
+                            Log.i(tag,address);
+                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" console";
+//                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" --syncmode light --cert 0ca175b9c0f726a831d895e2693324610ca175b9c0f726a831d895e269332461 console";
+//                        21232f297a57a5a743894a0e4a801fc3a3387ef03e0ed88b84ce6e5910938272
+//                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 8545 --ipcdisable --nodiscover console";
                         Log.i("Ucot", input);
-                        updateUI("res:" + output + "\n");
+                        updateUI(output + "\n");
                         try {
                             Runtime runtime = Runtime.getRuntime();
                             process = runtime.exec(input);
@@ -74,7 +78,7 @@ public class LNService extends Service {
                             output = null;
                             while ((output = br.readLine()) != null) {
                                 Log.e("Ucot", output);
-                                updateUI("res:" + output + "\n");
+                                updateUI(output);
                             }
                             try {
                                 process.waitFor();
@@ -150,7 +154,7 @@ public class LNService extends Service {
         Log.i("Ucot", "try to send command!: " + content);
         if (os != null) {
             try {
-                updateUI("send Command: " + content + "\n");
+//                updateUI("send Command: " + content + "\n");
                 os.write((content+ "\n").getBytes());
                 os.flush();
             } catch (Exception e) {

@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:ems="10"
-        android:text="eth.getBalance(eth.accounts[0])"
+        android:text="txpool.status"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <ScrollView
