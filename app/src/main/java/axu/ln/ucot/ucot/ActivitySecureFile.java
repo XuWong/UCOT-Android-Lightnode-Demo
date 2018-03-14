@@ -1,18 +1,17 @@
 package axu.ln.ucot.ucot;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,7 +22,6 @@ import android.support.annotation.NonNull;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -36,27 +34,35 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.necer.ndialog.NDialog;
 
-import axu.ln.ucot.ucot.R;
-import axu.ln.ucot.ucot.recycler.Adapter;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.Web3jFactory;
+import org.web3j.protocol.core.methods.response.EthTransaction;
+import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.http.HttpService;
+
+import axu.ln.ucot.ucot.recycler.AdapterVerifyResult;
+import axu.ln.ucot.ucot.recycler.VerifiedFile;
 import axu.ln.ucot.ucot.ui.InputDialog;
 import axu.ln.ucot.ucot.utils.FileUtils;
+import axu.ln.ucot.ucot.utils.HexUtils;
 import axu.ln.ucot.ucot.utils.PreferenceUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static axu.ln.ucot.ucot.utils.FileUtils.*;
 
-public class ActivitySecureFile extends AppCompatActivity implements ServiceCallbacks{
+public class ActivitySecureFile extends AppCompatActivity implements ServiceCallbacks {
 
     private static final String SAVED_DIRECTORY = "com.calintat.explorer.SAVED_DIRECTORY";
 
@@ -79,7 +85,7 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
     private File currentDirectory;
 
-    private Adapter adapter;
+    private AdapterVerifyResult adapter;
 
     private String name;
 
@@ -90,7 +96,9 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
     LNService lnService = null;
     boolean mBound = false;
-    private String fileSecureInfo="";
+    private String fileSecureInfo = "";
+    String TAG = "ucot";
+    boolean disPlayResult = false;
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
@@ -110,6 +118,7 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
             Log.i(tag, "Bound false");
         }
     };
+
     public void callBack(String content) {
         updateUI(content);
     }
@@ -117,6 +126,7 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
     public interface updateUI {
         void updateUI(String content);
     }
+
     private void updateUI(String content) {
         if (mainHandler == null) {
             runOnUiThread(new Runnable() {
@@ -181,15 +191,16 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
             mBound = false;
         }
     }
+
     private void actionShowMd5() {
 
         List<File> selectedItems = adapter.getSelectedItems();
         adapter.clearSelection();
-        String InfoTobeSave="";
+        String InfoTobeSave = "";
         for (File it : selectedItems) {
             try {
                 String result = md5(it);
-                InfoTobeSave=InfoTobeSave+it.getName()+":"+result+";";
+                InfoTobeSave = InfoTobeSave + it.getName() + ":" + result + ";";
                 if (result != null)
                     Log.i(tag, result);
                 else
@@ -198,14 +209,95 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
                 e.printStackTrace();
             }
         }
-        fileSecureInfo=InfoTobeSave;
+        fileSecureInfo = InfoTobeSave;
         SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
         String address = sp.getString(getString(R.string.sp_address), null);
         String sendTxCommand = "eth.sendTransaction({from:\"0x" + address + "\",to:\"0x" + getString(R.string.bc_server_account) + "\",value:web3.toWei(0,\"ether\"),data:web3.toHex(\"" + InfoTobeSave + "\")})";
-        sentTX=true;
+        sentTX = true;
         Log.i(tag, sendTxCommand);
         sendCommand(sendTxCommand);
 
+    }
+
+    private void verifyMd5() {
+        AsyncTask<Void, Void, Map<String, Integer>> execute = new AsyncTask<Void, Void, Map<String, Integer>>() {
+            @Override
+            protected Map<String, Integer> doInBackground(Void... voids) {
+                Map<String, Integer> verifiedFiles = new HashMap<String, Integer>();
+                try {
+                    int defaultState = 0;
+                    Web3j web3 = Web3jFactory.build(new HttpService());
+//                    File[] files = currentDirectory.listFiles();
+                    File[] files = FileUtils.getChildren(currentDirectory);
+                    for (File f : files) {
+                        if (f.isDirectory()) {
+                            continue;
+                        }
+                        SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
+                        String txHash = sp.getString(f.getName() + "txHash", null);
+                        if (txHash == null) {
+                            verifiedFiles.put(f.getName(), defaultState);
+                            continue;
+                        } else {
+                            Log.i(tag, f.getName() + ":" + txHash);
+//                            EthTransaction ethTransaction = web3.ethGetTransactionByHash("0x4dafe6da356b3d58e88c562fa62631d4ba5d2fb94b6137f04f61a7ed468f57da").send();
+                            EthTransaction ethTransaction = web3.ethGetTransactionByHash(txHash.replace("\"", "")).send();
+                            Transaction transaction = ethTransaction.getResult();
+                            if (transaction == null) {
+                                verifiedFiles.put(f.getName(), defaultState);
+                                continue;
+                            }
+                            String hex = transaction.getInput();
+                            if (hex == null) {
+                                verifiedFiles.put(f.getName(), defaultState);
+                                continue;
+                            }
+                            String info = HexUtils.decode(hex);
+                            String[] InfoList = info.split(";");
+                            String bcMD5 = null;
+                            for (String it : InfoList) {
+                                if (it.startsWith(f.getName())) {
+                                    bcMD5 = it.substring(it.indexOf(":") + 1);
+                                    break;
+                                }
+                            }
+                            if (bcMD5 == null) {
+                                verifiedFiles.put(f.getName(), defaultState);
+                                continue;
+                            }
+                            String fileMD5 = md5(f);
+                            if (bcMD5.equals(fileMD5)) {
+                                verifiedFiles.put(f.getName(), 1);
+                            } else {
+                                verifiedFiles.put(f.getName(), 2);
+                            }
+
+                        }
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return verifiedFiles;
+            }
+
+            @Override
+            protected void onPostExecute(Map<String, Integer> verifiedFiles) {
+                adapter.clear();
+                adapter.clearSelection();
+                disPlayResult = true;
+                toolbarLayout.setTitle("Authentication   result");
+                adapter.addVerifiedFiles(verifiedFiles);
+                File[] FileList = FileUtils.getChildren(currentDirectory);
+                for (File vf : FileList) {
+                    if (vf.isFile()) {
+                        adapter.add(vf);
+                        Log.i(tag, vf.getName() + ":" + verifiedFiles.get(vf.getName()));
+                    }
+                }
+//                adapter.addAll();
+            }
+        }.execute();
     }
     //----------------------------------------------------------------------------------------------
 
@@ -232,21 +324,20 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
                     case 2: {
                         SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
                         SharedPreferences.Editor sped = sp.edit();
-                        String[] InfoList=fileSecureInfo.split(";");
+                        String[] InfoList = fileSecureInfo.split(";");
                         for (String it : InfoList) {
                             try {
-                                if (it.indexOf(":")>0)
-                                {
-                                    String[] nameMd5=it.split(":");
-                                    sped.putString(nameMd5[0]+"lpmd5",nameMd5[1]);
-                                    sped.putString(nameMd5[0]+"txHash",msg.obj.toString());
+                                if (it.indexOf(":") > 0) {
+                                    String[] nameMd5 = it.split(":");
+                                    sped.putString(nameMd5[0] + "lpmd5", nameMd5[1]);
+                                    sped.putString(nameMd5[0] + "txHash", msg.obj.toString());
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
                         sped.commit();
-                        Toast.makeText(getApplicationContext(),"Selected files are secured with TX hash:"+msg.obj.toString(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Selected files are secured with TX hash:" + msg.obj.toString(), Toast.LENGTH_SHORT).show();
                         break;
                     }
                     case 3: {
@@ -261,6 +352,11 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
     @Override
     public void onBackPressed() {
+        if (disPlayResult) {
+            setPath(currentDirectory);
+            disPlayResult = false;
+            return;
+        }
 
         if (drawerLayout.isDrawerOpen(navigationView)) {
 
@@ -282,7 +378,6 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
             return;
         }
-
         super.onBackPressed();
     }
 
@@ -353,15 +448,19 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
         switch (item.getItemId()) {
 
             case R.id.action_delete:
-                actionDelete();
+//                actionDelete();
+//                actionShowMd5();
                 return true;
 
             case R.id.action_rename:
-                actionRename();
+//                actionRename();
+                actionShowMd5();
+//                verifyMd5();
                 return true;
 
             case R.id.action_search:
-                actionSearch();
+//                actionSearch();
+                verifyMd5();
                 return true;
 
             case R.id.action_copy:
@@ -387,7 +486,6 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
     }
 
 
-
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
@@ -395,19 +493,23 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
             int count = adapter.getSelectedItemCount();
 
-            menu.findItem(R.id.action_delete).setVisible(count >= 1);
+            menu.findItem(R.id.action_delete).setVisible(false);
 
             menu.findItem(R.id.action_rename).setVisible(count >= 1);
 
             menu.findItem(R.id.action_search).setVisible(count == 0);
 
-            menu.findItem(R.id.action_copy).setVisible(count >= 1 && name == null && type == null);
-
-            menu.findItem(R.id.action_move).setVisible(count >= 1 && name == null && type == null);
-
-            menu.findItem(R.id.action_send).setVisible(count >= 1);
-
-            menu.findItem(R.id.action_sort).setVisible(count == 0);
+            menu.findItem(R.id.action_copy).setVisible(false);
+            menu.findItem(R.id.action_move).setVisible(false);
+            menu.findItem(R.id.action_send).setVisible(false);
+            menu.findItem(R.id.action_sort).setVisible(false);
+//            menu.findItem(R.id.action_copy).setVisible(count >= 1 && name == null && type == null);
+//
+//            menu.findItem(R.id.action_move).setVisible(count >= 1 && name == null && type == null);
+//
+//            menu.findItem(R.id.action_send).setVisible(count >= 1);
+//
+//            menu.findItem(R.id.action_sort).setVisible(count == 0);
         }
 
         return super.onPrepareOptionsMenu(menu);
@@ -605,7 +707,7 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
 
     private void initRecyclerView() {
 
-        adapter = new Adapter(this);
+        adapter = new AdapterVerifyResult(this);
 
         adapter.setOnItemClickListener(new OnItemClickListener(this));
 
@@ -682,7 +784,7 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
             toolbarLayout.setTitle(getName(currentDirectory));
         } else {
 
-            toolbarLayout.setTitle(getResources().getString(R.string.app_name));
+            toolbarLayout.setTitle("File secure");
         }
     }
 
@@ -1046,45 +1148,106 @@ public class ActivitySecureFile extends AppCompatActivity implements ServiceCall
                     showMessage("Cannot open directory");
                 }
             } else {
-                String md5F = "";
-                try {
-                    md5F = md5(file);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                new NDialog(ActivitySecureFile.this)
-                        .setTitle("md5 of " + file.getName())
-                        .setTitleCenter(false)
-                        .setMessageCenter(false)
-                        .setMessage("md5 of local file:\n"+md5F)
-                        .setMessageSize(15)
-                        .setButtonCenter(false)
-                        .setButtonSize(14)
-                        .setCancleable(true)
-                        .setPositiveButtonText("Open file")
-                        .setNegativeButtonText("Cancle")
-                        .setOnConfirmListener(new NDialog.OnConfirmListener() {
-                            @Override
-                            public void onClick(int which) {
-                                if (which==1)
-                                {
-                                    if (Intent.ACTION_GET_CONTENT.equals(getIntent().getAction())) {
-                                        Intent intent = new Intent();
-                                        intent.setDataAndType(Uri.fromFile(file), getMimeType(file));
-                                        setResult(Activity.RESULT_OK, intent);
-                                        finish();
-                                    } else {
-                                        try {
-                                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                                            intent.setDataAndType(Uri.fromFile(file), getMimeType(file));
-                                            startActivity(intent);
-                                        } catch (Exception e) {
-                                            showMessage(String.format("Cannot open %s", getName(file)));
-                                        }
+                AsyncTask<File, Void, String> execute = new AsyncTask<File, Void, String>() {
+                    protected String doInBackground(File... files) {
+                        File f = files[0];
+                        String result = f.getName();
+                        try {
+                            int defaultState = 0;
+                            Web3j web3 = Web3jFactory.build(new HttpService());
+                            if (f.isDirectory()) {
+                                return result;
+                            }
+                            result = md5(f);
+                            SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
+                            String txHash = sp.getString(f.getName() + "txHash", null);
+                            if (txHash == null) {
+                                return result;
+                            } else {
+                                EthTransaction ethTransaction = web3.ethGetTransactionByHash(txHash.replace("\"", "")).send();
+                                Transaction transaction = ethTransaction.getResult();
+                                if (transaction == null) {
+                                    return result;
+                                }
+                                String hex = transaction.getInput();
+                                if (hex == null) {
+                                    return result;
+                                }
+                                String info = HexUtils.decode(hex);
+                                String[] InfoList = info.split(";");
+                                String bcMD5 = "";
+                                for (String it : InfoList) {
+                                    if (it.startsWith(f.getName())) {
+                                        bcMD5 = it.substring(it.indexOf(":") + 1);
+                                        break;
                                     }
                                 }
+                                if (bcMD5 == null) {
+                                    return result;
+                                }
+                                return result + ":" + bcMD5;
+
                             }
-                        }).create(NDialog.CONFIRM).show();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                        return result;
+                    }
+
+
+                    protected void onPostExecute(String result) {
+                        String LCmd5 = "";
+                        String BCmd5 = "";
+                        String message="";
+                        if (result.indexOf(":")>0)
+                        {
+                            String [] md5s=result.split(":");
+                            LCmd5=md5s[0];
+                            BCmd5=md5s[1];
+                            message= "md5 of local file:\n" + LCmd5 + "\nmd5 stored in Blockchain:\n" + BCmd5;
+                        }
+                        else{
+
+                            message= "md5 of local file:\n" + result + "\nUnregistered in Blockchain";
+                        }
+                        new NDialog(ActivitySecureFile.this)
+                                .setTitle("md5 of " + file.getName())
+                                .setTitleCenter(false)
+                                .setMessageCenter(false)
+                                .setMessage(message)
+                                .setMessageSize(15)
+                                .setButtonCenter(false)
+                                .setButtonSize(14)
+                                .setCancleable(true)
+                                .setPositiveButtonText("Open file")
+                                .setNegativeButtonText("Cancle")
+                                .setOnConfirmListener(new NDialog.OnConfirmListener() {
+                                    @Override
+                                    public void onClick(int which) {
+                                        if (which == 1) {
+                                            if (Intent.ACTION_GET_CONTENT.equals(getIntent().getAction())) {
+                                                Intent intent = new Intent();
+                                                intent.setDataAndType(Uri.fromFile(file), getMimeType(file));
+                                                setResult(Activity.RESULT_OK, intent);
+                                                finish();
+                                            } else {
+                                                try {
+                                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                                    intent.setDataAndType(Uri.fromFile(file), getMimeType(file));
+                                                    startActivity(intent);
+                                                } catch (Exception e) {
+                                                    showMessage(String.format("Cannot open %s", getName(file)));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }).create(NDialog.CONFIRM).show();
+
+                    }
+                }.execute(file);
+
 
 //                if (Intent.ACTION_GET_CONTENT.equals(getIntent().getAction())) {
 //

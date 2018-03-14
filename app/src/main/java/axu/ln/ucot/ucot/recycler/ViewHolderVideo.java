@@ -48,6 +48,11 @@ final class ViewHolderVideo extends ViewHolder {
 
         Glide.with(context).load(file).into(image);
     }
+    @Override
+    protected void bindIconWithState(File file, Boolean selected,int state) {
+
+        Glide.with(context).load(file).into(image);
+    }
 
     @Override
     protected void bindName(File file) {

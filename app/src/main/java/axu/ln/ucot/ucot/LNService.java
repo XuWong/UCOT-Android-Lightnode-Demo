@@ -64,7 +64,7 @@ public class LNService extends Service {
                         address =sp.getString(getString(R.string.sp_address),null);
                         if (address!=null)
                             Log.i(tag,address);
-                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" console";
+                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 8545 --ipcdisable --nodiscover --unlock "+address+" console";
 //                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 3333 --ipcdisable --nodiscover --unlock "+address+" --syncmode light --cert 0ca175b9c0f726a831d895e2693324610ca175b9c0f726a831d895e269332461 console";
 //                        21232f297a57a5a743894a0e4a801fc3a3387ef03e0ed88b84ce6e5910938272
 //                        input = getFilesDir() + "/.ucot/ucot --datadir " + getFilesDir() + "/.ucot/node --networkid 15 --port 30604 --rpc --rpcport 8545 --ipcdisable --nodiscover console";

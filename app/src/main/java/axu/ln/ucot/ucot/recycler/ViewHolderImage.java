@@ -51,7 +51,24 @@ final class ViewHolderImage extends ViewHolder {
     @Override
     protected void bindIcon(File file, Boolean selected) {
 
-        final int color = ContextCompat.getColor(context, getColorResource(file));
+        final int color = ContextCompat.getColor(context, getColorResource(context,file));
+
+        Glide.with(context).load(file).asBitmap().fitCenter().into(new BitmapImageViewTarget(image) {
+
+            @Override
+            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> animation) {
+
+                this.view.setImageBitmap(resource);
+
+                name.setBackgroundColor(Palette.from(resource).generate().getMutedColor(color));
+            }
+        });
+    }
+
+    @Override
+    protected void bindIconWithState(File file, Boolean selected,int state) {
+
+        final int color = ContextCompat.getColor(context, getColorResource(context,file));
 
         Glide.with(context).load(file).asBitmap().fitCenter().into(new BitmapImageViewTarget(image) {
 

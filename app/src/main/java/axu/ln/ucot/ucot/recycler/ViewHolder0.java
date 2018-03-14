@@ -78,11 +78,11 @@ final class ViewHolder0 extends ViewHolder {
             }
             else {
 
-                int color = ContextCompat.getColor(context, getColorResource(file));
+                int color = ContextCompat.getColor(context, getColorResource(context,file));
 
                 image.setBackground(getBackground(color));
 
-                Drawable drawable = ContextCompat.getDrawable(context, getImageResource(file));
+                Drawable drawable = ContextCompat.getDrawable(context, getImageResource(context,file));
 
                 DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
 
@@ -91,11 +91,88 @@ final class ViewHolder0 extends ViewHolder {
         }
         else {
 
-            int color = ContextCompat.getColor(context, getColorResource(file));
+            int color = ContextCompat.getColor(context, getColorResource(context,file));
 
             image.setBackground(null);
 
-            Drawable drawable = ContextCompat.getDrawable(context, getImageResource(file));
+            Drawable drawable = ContextCompat.getDrawable(context, getImageResource(context,file));
+
+            DrawableCompat.setTint(drawable, color);
+
+            image.setImageDrawable(drawable);
+        }
+    }
+    @Override
+    protected void bindIconWithState(File file, Boolean selected,int state) {
+
+        if (state==1 &&  file.isFile())
+        {
+            int color = ContextCompat.getColor(context, R.color.colorPrimaryDark0);
+            image.setBackground(getBackground(color));
+
+            Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_selected);
+
+            DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
+
+            image.setImageDrawable(drawable);
+            return;
+        }
+        else if (state==2 && file.isFile())
+        {
+            int color = ContextCompat.getColor(context, R.color.video);
+            image.setBackground(getBackground(color));
+            Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_feedback);
+            DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
+            image.setImageDrawable(drawable);
+            return;
+        }
+        else if (state==0 && file.isFile())
+        {
+            int color = ContextCompat.getColor(context, R.color.misc_file);
+            image.setBackground(getBackground(color));
+            Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_misc_file);
+            DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
+            image.setImageDrawable(drawable);
+            return;
+        }
+        else if (getBoolean(context, "pref_icon", true)) {
+
+            image.setOnClickListener(onActionClickListener);
+
+            image.setOnLongClickListener(onActionLongClickListener);
+
+            if (selected) {
+
+                int color = ContextCompat.getColor(context, R.color.misc_file);
+
+                image.setBackground(getBackground(color));
+
+                Drawable drawable = ContextCompat.getDrawable(context, R.drawable.ic_selected);
+
+                DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
+
+                image.setImageDrawable(drawable);
+            }
+            else {
+
+                int color = ContextCompat.getColor(context, getColorResource(context,file));
+
+                image.setBackground(getBackground(color));
+
+                Drawable drawable = ContextCompat.getDrawable(context, getImageResource(context,file));
+
+                DrawableCompat.setTint(drawable, Color.rgb(255, 255, 255));
+
+                image.setImageDrawable(drawable);
+            }
+        }
+        else {
+
+            int color = ContextCompat.getColor(context, getColorResource(context,file));
+
+            image.setBackground(null);
+
+            Drawable drawable = ContextCompat.getDrawable(context, getImageResource(context,file));
 
             DrawableCompat.setTint(drawable, color);
 

@@ -2,6 +2,7 @@ package axu.ln.ucot.ucot.utils;
 
 import android.content.Context;
 import android.content.CursorLoader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -408,8 +409,10 @@ public class FileUtils {
         return Long.compare(length2, length1);
     }
 
-    public static int getColorResource(File file) {
-
+    public static int getColorResource(Context ctx,File file) {
+        SharedPreferences sp = ctx.getSharedPreferences(ctx.getString(R.string.sp_name), 0);
+        if (sp.getString(file.getName()+"txHash",null)!=null)
+            return R.color.video;
         switch (FileType.getFileType(file)) {
 
             case DIRECTORY:
@@ -452,8 +455,11 @@ public class FileUtils {
 
     //----------------------------------------------------------------------------------------------
 
-    public static int getImageResource(File file) {
+    public static int getImageResource(Context ctx,File file) {
 
+        SharedPreferences sp = ctx.getSharedPreferences(ctx.getString(R.string.sp_name), 0);
+        if (sp.getString(file.getName()+"txHash",null)!=null)
+            return R.drawable.ic_dashboard_black_24dp;
         switch (FileType.getFileType(file)) {
 
             case DIRECTORY:

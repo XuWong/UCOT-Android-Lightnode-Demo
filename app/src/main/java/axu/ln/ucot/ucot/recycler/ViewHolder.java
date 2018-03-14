@@ -47,6 +47,7 @@ abstract class ViewHolder extends RecyclerView.ViewHolder {
     protected abstract void loadInfo();
 
     protected abstract void bindIcon(File file, Boolean selected);
+    protected abstract void bindIconWithState(File file, Boolean selected,int state);
 
     protected abstract void bindName(File file);
 
@@ -65,6 +66,21 @@ abstract class ViewHolder extends RecyclerView.ViewHolder {
         this.onLongClickListener = v -> listener.onItemLongClick(getAdapterPosition());
     }
 
+    void setData(final File file, Boolean selected, int state) {
+
+        itemView.setOnClickListener(onClickListener);
+
+        itemView.setOnLongClickListener(onLongClickListener);
+
+        itemView.setSelected(selected);
+
+        bindIconWithState(file, selected,state);
+
+        bindName(file);
+
+        bindInfo(file);
+    }
+
     void setData(final File file, Boolean selected) {
 
         itemView.setOnClickListener(onClickListener);
@@ -79,7 +95,6 @@ abstract class ViewHolder extends RecyclerView.ViewHolder {
 
         bindInfo(file);
     }
-
     void setVisibility(View view, Boolean visibility) {
 
         view.setVisibility(visibility ? View.VISIBLE : View.GONE);

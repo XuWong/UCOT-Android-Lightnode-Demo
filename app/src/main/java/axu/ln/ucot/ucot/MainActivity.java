@@ -119,12 +119,12 @@ public class MainActivity extends AppCompatActivity implements ServiceCallbacks 
             public void onClick(View view) {
 
 
-                SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
-                String txhash = sp.getString("logs_360_clear.timestamptxHash", null);
-                Log.i(tag,txhash);
-                sendCommand("eth.getTransaction("+txhash+")");
+//                SharedPreferences sp = getSharedPreferences(getString(R.string.sp_name), MODE_PRIVATE);
+//                String txhash = sp.getString("logs_360_clear.timestamptxHash", null);
+//                Log.i(tag,txhash);
+//                sendCommand("eth.getTransaction("+txhash+")");
 
-//                sendCommand(ed.getText().toString());
+                sendCommand(ed.getText().toString());
 //                Snackbar.make(view, "Light client is not ready.", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });

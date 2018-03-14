@@ -70,6 +70,22 @@ final class ViewHolderAudio extends ViewHolder {
             image.setImageResource(R.drawable.ic_audio);
         }
     }
+    @Override
+    protected void bindIconWithState(File file, Boolean selected,int state) {
+
+        try {
+
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+
+            retriever.setDataSource(file.getPath());
+
+            Glide.with(context).load(retriever.getEmbeddedPicture()).into(image);
+        }
+        catch (Exception e) {
+
+            image.setImageResource(R.drawable.ic_audio);
+        }
+    }
 
     @Override
     protected void bindName(File file) {
